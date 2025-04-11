@@ -5,33 +5,80 @@ import {
   StyleSheet, 
   ScrollView, 
   TouchableOpacity, 
-  Image, 
   FlatList,
   Dimensions,
   StatusBar
 } from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import { colors } from '../styles/colors';
 import NewsCarousel from '../components/NewsCarousel';
 import SectorCard from '../components/SectorCard';
 import EventCard from '../components/EventCard';
-import WeatherWidget from '../components/WeatherWidget';
+import Header from '../components/Header';
 
 const { width } = Dimensions.get('window');
 
+// Cores fixas para substituir o ThemeContext
+const colors = {
+  primary: '#0C447F',
+  secondary: '#26A69A',
+  tertiary: '#7E57C2',
+  accent1: '#F57C00',
+  accent2: '#D32F2F',
+  accent3: '#7CB342',
+  background: '#F5F5F5',
+  text: '#333333'
+};
+
 const HomeScreen = ({ navigation }) => {
+  // Estado para controlar a tab ativa
   const [activeTab, setActiveTab] = useState('Destaques');
-  
-  // Dados de exemplo para os setores (atualizados com as cores do logo)
+
+  // Refs para cada seção
+  const scrollViewRef = useRef(null);
+  const destaquesRef = useRef(null);
+  const noticiasRef = useRef(null);
+  const servicosRef = useRef(null);
+  const eventosRef = useRef(null);
+
+  // Posições Y de cada seção
+  const [sectionPositions, setSectionPositions] = useState({
+    Destaques: 0,
+    Notícias: 0,
+    Serviços: 0,
+    Eventos: 0
+  });
+
+  // Função para lidar com o clique nas tabs
+  const handleTabPress = (tab) => {
+    setActiveTab(tab);
+    
+    // Rolar para a seção correspondente
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({
+        y: sectionPositions[tab],
+        animated: true
+      });
+    }
+  };
+
+  // Função para capturar as posições das seções
+  const captureSectionLayout = (sectionName, event) => {
+    const { y } = event.nativeEvent.layout;
+    setSectionPositions(prev => ({
+      ...prev,
+      [sectionName]: y
+    }));
+  };
+
+  // Dados de exemplo para os setores
   const sectors = [
     { id: '1', title: 'Saúde', icon: 'heart', color: colors.primary },
     { id: '2', title: 'Educação', icon: 'book', color: colors.secondary },
     { id: '3', title: 'Transporte', icon: 'truck', color: colors.tertiary },
     { id: '4', title: 'Turismo', icon: 'map-pin', color: colors.accent1 },
-    { id: '5', title: 'Segurança', icon: 'shield', color: colors.accent2 },
+    { id: '5', title: 'Segurança', icon: 'shield', color: '#FFC300' },
     { id: '6', title: 'Cultura', icon: 'film', color: colors.accent3 },
   ];
-  
+
   // Dados de exemplo para os eventos
   const events = [
     { 
@@ -59,15 +106,15 @@ const HomeScreen = ({ navigation }) => {
       time: '07:00'
     },
   ];
-  
+
   // Dados de exemplo para as notícias
   const news = [
     {
       id: '1',
-      title: 'Prefeitura anuncia novo programa de revitalização urbana',
-      image: 'https://via.placeholder.com/400x200',
-      date: '10 Ago 2023',
-      category: 'Urbanismo'
+      title: 'ESF da Figueira realiza horta comunitária e promove sustento e união para a comunidade',
+      image: 'https://queluz.sp.gov.br/wp-content/uploads/2025/04/WhatsApp-Image-2025-04-09-at-11.01.21-1-800x445.jpeg',
+      date: '27 Mar 2025',
+      category: 'Saúde'
     },
     {
       id: '2',
@@ -85,89 +132,92 @@ const HomeScreen = ({ navigation }) => {
     },
   ];
 
-  const tabs = ['Destaques', 'Notícias', 'Serviços'];
+  // Monitorar o scroll para atualizar a tab ativa
+  const handleScroll = (event) => {
+    const scrollY = event.nativeEvent.contentOffset.y;
+    
+    // Determinar qual seção está mais visível
+    if (scrollY < sectionPositions.Serviços - 50) {
+      setActiveTab('Notícias');
+    } else if (scrollY < sectionPositions.Eventos - 50) {
+      setActiveTab('Serviços');
+    } else {
+      setActiveTab('Eventos');
+    }
+  };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar backgroundColor={colors.primary} barStyle="light-content" />
-      
-      {/* Header Atualizado */}
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity onPress={() => navigation.openDrawer()}>
-            <Feather name="menu" size={24} color="#FFF" />
-          </TouchableOpacity>
-          
-          {/* Logo da cidade no lugar do texto */}
-          <Image 
-            source={{ uri: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-s9nV46k2Zbfu1Z3c6FIwk7AeuQcfkN.png' }} 
-            style={styles.cityLogo}
-            resizeMode="contain"
-          />
-          
-          <TouchableOpacity>
-            <Feather name="bell" size={24} color="#FFF" />
-          </TouchableOpacity>
-        </View>
-        
-        <View style={styles.headerBottom}>
-          <WeatherWidget />
-          
-          <View style={styles.tabsContainer}>
-            {tabs.map((tab) => (
-              <TouchableOpacity 
-                key={tab}
-                style={[styles.tab, activeTab === tab && styles.activeTab]}
-                onPress={() => setActiveTab(tab)}
-              >
-                <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
-                  {tab}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </View>
+
+      {/* Passando activeTab e onTabPress para o Header */}
+      <Header 
+        navigation={navigation} 
+        showTabs={true} 
+        showWeather={true} 
+        activeTab={activeTab}
+        onTabPress={handleTabPress}
+        />
       
       {/* Body */}
-      <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
-        {/* Notícias em Destaque */}
-        <View style={styles.section}>
+      <ScrollView 
+        ref={scrollViewRef}
+        style={styles.body} 
+        showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16} // Para melhor performance
+      >
+        
+        {/* Notícias */}
+        <View 
+          ref={noticiasRef}
+          onLayout={(event) => captureSectionLayout('Notícias', event)}
+          style={styles.section}
+        >
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Notícias</Text>
-            <TouchableOpacity>
-              <Text style={styles.seeAllText}>Ver todas</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Notícias</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('NewsList')}>
+              <Text style={[styles.seeAllText, { color: colors.primary }]}>Ver todas</Text>
             </TouchableOpacity>
           </View>
           
           <NewsCarousel news={news} />
         </View>
         
-        {/* Setores */}
-        <View style={styles.section}>
+        {/* Serviços */}
+        <View 
+          ref={servicosRef}
+          onLayout={(event) => captureSectionLayout('Serviços', event)}
+          style={styles.section}
+        >
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Serviços</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Serviços</Text>
           </View>
           
           <View style={styles.sectorsGrid}>
             {sectors.map((sector) => (
               <SectorCard 
                 key={sector.id} 
+                id={sector.id}
                 title={sector.title} 
                 icon={sector.icon} 
                 color={sector.color}
-                onPress={() => console.log(`Setor ${sector.title} clicado`)}
+                navigation={navigation}
               />
             ))}
           </View>
         </View>
         
         {/* Eventos */}
-        <View style={styles.section}>
+        <View 
+          ref={eventosRef}
+          onLayout={(event) => captureSectionLayout('Eventos', event)}
+          style={styles.section}
+        >
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Eventos</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Eventos</Text>
             <TouchableOpacity>
-              <Text style={styles.seeAllText}>Ver todos</Text>
+              <Text style={[styles.seeAllText, { color: colors.primary }]}>Ver todos</Text>
             </TouchableOpacity>
           </View>
           
@@ -200,54 +250,6 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    backgroundColor: colors.primary,
-    paddingTop: 40,
-    paddingBottom: 15,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 15,
-  },
-  cityLogo: {
-    width: 120,
-    height: 40,
-  },
-  headerBottom: {
-    paddingHorizontal: 20,
-  },
-  tabsContainer: {
-    flexDirection: 'row',
-    marginTop: 15,
-  },
-  tab: {
-    marginRight: 20,
-    paddingBottom: 8,
-  },
-  activeTab: {
-    borderBottomWidth: 3,
-    borderBottomColor: '#FFF',
-  },
-  tabText: {
-    color: 'rgba(255, 255, 255, 0.7)',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  activeTabText: {
-    color: '#FFF',
-    fontWeight: 'bold',
   },
   body: {
     flex: 1,
@@ -265,10 +267,8 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: colors.text,
   },
   seeAllText: {
-    color: colors.primary,
     fontWeight: '500',
   },
   sectorsGrid: {
@@ -282,5 +282,3 @@ const styles = StyleSheet.create({
 });
 
 export default HomeScreen;
-
-console.log('HomeScreen atualizado com o logo de Queluz!');
