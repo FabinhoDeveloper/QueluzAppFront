@@ -1,8 +1,8 @@
 export const colors = {
     // Cores extraídas do logo de Queluz
-    primary: '#D01A21', // Vermelho do Q
-    primaryDark: '#B01519', // Vermelho escuro
-    primaryLight: '#FFEEEE', // Vermelho claro
+    primary: '#0C447F', // Vermelho do Q D01A21 | 0C447F - Azul
+    primaryDark: '#a9cce3', // Vermelho escuro
+    primaryLight: '#a9cce3', // Vermelho claro
     
     secondary: '#00843D', // Verde do e
     secondaryDark: '#006E33', // Verde escuro

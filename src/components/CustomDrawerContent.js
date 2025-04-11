@@ -32,7 +32,7 @@ const CustomDrawerContent = (props) => {
 
   const menuItems = [
     { icon: 'home', label: 'Início', screen: 'Home' },
-    { icon: 'calendar', label: 'Agenda', screen: 'Calendar' },
+    { icon: 'calendar', label: 'Agenda', screen: 'Agenda' },
     { icon: 'map', label: 'Mapa da Cidade', screen: 'Map' },
     { icon: 'phone', label: 'Telefones Úteis', screen: 'Phones' },
     { icon: 'file-text', label: 'Documentos', screen: 'Documents' },
@@ -54,7 +54,7 @@ const CustomDrawerContent = (props) => {
     >
       <View style={styles.userSection}>
         <Image 
-          source={{ uri: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-s9nV46k2Zbfu1Z3c6FIwk7AeuQcfkN.png' }} 
+          source={require('../../assets/logoBranca1.png')}
           style={styles.cityLogo} 
           resizeMode="contain"
         />
